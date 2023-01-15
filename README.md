@@ -48,3 +48,12 @@ Now my kindle happily connects (and reconnects after sleeping) to the wifi despi
 You can't normally edit values in the kdb database because they're read from a read-only mount. Instead you can copy the database elsewhere, and create a read-write bind mount over the original path.
 
 I ended up not needing this, but it's a useful hack: https://www.mobileread.com/forums/showpost.php?p=3279358&postcount=3
+
+
+## Dump of links
+ - http://www.mobileread.mobi/forums/showthread.php?t=337314
+ - http://www.mobileread.mobi/forums/showthread.php?t=127842
+ - http://www.mobileread.mobi/forums/showthread.php?t=271120
+ - https://news.ycombinator.com/item?id=11897804
+ - https://www.sixfoisneuf.fr/posts/kindle-hacking-deeper-dive-internals/
+
