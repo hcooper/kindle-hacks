@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 KINDLE_ID=$(hostname | grep -o ".$"):
@@ -22,10 +21,10 @@ stop powerd >/dev/null 2>&1 || true
 pkill powerd >/dev/null 2>&1 || true
 
 # Set config here rather than
-IMAGE_URI="http://kindle_screensaver.ak/$KINDLE_ID" # Runs hass-lovelace-kindle-screensaver
+IMAGE_URI="http://kindle_screensaver.ak:8080/$KINDLE_ID" # Runs hass-lovelace-kindle-screensaver
 SCREENSAVERFOLDER=/tmp
 SCREENSAVERFILE=$SCREENSAVERFOLDER/bg_ss00.png
-NETWORK_TEST_CMD="curl --silent --fail http://10.10.3.1/ >/dev/null"
+NETWORK_TEST_CMD="curl --silent --fail http://kindle_screensaver.ak/ >/dev/null"
 NETWORK_TIMEOUT=30
 TMPFILE=/tmp/tmp.onlinescreensaver.png
 
