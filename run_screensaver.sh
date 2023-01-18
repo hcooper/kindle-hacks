@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -euo pipefail
+
+KINDLE_ID=$(hostname | grep -o ".$"):
+
 # This script is highly inspired by onlinescreensaver (https://www.mobileread.com/forums/showthread.php?t=236104).
 # However on my device (a PW3) I had problems with power management (sometimes it wouldn't
 # sleep, othertimes it would't wake up, etc...). So instead the script kills the regular
@@ -18,13 +22,14 @@ stop powerd >/dev/null 2>&1 || true
 pkill powerd >/dev/null 2>&1 || true
 
 # Set config here rather than
-IMAGE_URI="http://kindle_screensaver.ak/" # Runs hass-lovelace-kindle-screensaver
-SCREENSAVERFOLDER=/mnt/us/linkss/screensavers/
+IMAGE_URI="http://kindle_screensaver.ak/$KINDLE_ID" # Runs hass-lovelace-kindle-screensaver
+SCREENSAVERFOLDER=/tmp
 SCREENSAVERFILE=$SCREENSAVERFOLDER/bg_ss00.png
 NETWORK_TEST_CMD="curl --silent --fail http://10.10.3.1/ >/dev/null"
 NETWORK_TIMEOUT=30
 TMPFILE=/tmp/tmp.onlinescreensaver.png
 
+run() {
 while true; do
 
     BATTERY_LEVEL=$(cat /sys/devices/system/wario_battery/wario_battery0/battery_capacity)
@@ -77,3 +82,6 @@ while true; do
     fi
 
 done
+}
+
+run &
