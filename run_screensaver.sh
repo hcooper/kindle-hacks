@@ -29,58 +29,58 @@ NETWORK_TIMEOUT=30
 TMPFILE=/tmp/tmp.onlinescreensaver.png
 
 run() {
-while true; do
+    while true; do
 
-    BATTERY_LEVEL=$(cat /sys/devices/system/wario_battery/wario_battery0/battery_capacity)
-    IS_CHARGING=$(cat /sys/devices/system/wario_charger/wario_charger0/charging)
+        BATTERY_LEVEL=$(cat /sys/devices/system/wario_battery/wario_battery0/battery_capacity)
+        IS_CHARGING=$(cat /sys/devices/system/wario_charger/wario_charger0/charging)
 
-    TIMER=${NETWORK_TIMEOUT} # number of seconds to attempt a connection
-    CONNECTED=0              # whether we are currently connected
+        TIMER=${NETWORK_TIMEOUT} # number of seconds to attempt a connection
+        CONNECTED=0              # whether we are currently connected
 
-    while [ 0 -eq $CONNECTED ]; do
-        # test whether we can ping outside
-        sh -c "$NETWORK_TEST_CMD" && CONNECTED=1
+        while [ 0 -eq $CONNECTED ]; do
+            # test whether we can ping outside
+            sh -c "$NETWORK_TEST_CMD" && CONNECTED=1
 
-        # if we can't, checkout timeout or sleep for 1s
-        if [ 0 -eq $CONNECTED ]; then
-            TIMER=$(($TIMER - 1))
-            if [ 0 -eq $TIMER ]; then
-                logger -s "No internet connection after ${NETWORK_TIMEOUT} seconds, aborting."
-                break
+            # if we can't, checkout timeout or sleep for 1s
+            if [ 0 -eq $CONNECTED ]; then
+                TIMER=$(($TIMER - 1))
+                if [ 0 -eq $TIMER ]; then
+                    logger -s "No internet connection after ${NETWORK_TIMEOUT} seconds, aborting."
+                    break
+                else
+                    sleep 1
+                fi
+            fi
+        done
+
+        if [ 1 -eq $CONNECTED ]; then
+
+            # Extra parameters to log battery informaton to hass-lovelace-kindle-screensaver
+            if wget -q "$IMAGE_URI?batteryLevel=$BATTERY_LEVEL&isCharging=$IS_CHARGING" -O $TMPFILE; then
+                # To avoid ownership errors cp+rm rather than mv
+                cp $TMPFILE $SCREENSAVERFILE
+                rm -f $TMPFILE
+                logger -s "Screen saver image updated. Refreshing screen."
+
+                # refresh screen
+                eips -f -g $SCREENSAVERFILE
             else
-                sleep 1
+                logger -s "Error updating screensaver"
             fi
         fi
-    done
 
-    if [ 1 -eq $CONNECTED ]; then
+        # Fetch the config file which controls how long we sleep for
+        SLEEP_DURATION=$(curl --silent --fail http://10.10.3.1/kindle-sleep-duration || echo 0)
 
-        # Extra parameters to log battery informaton to hass-lovelace-kindle-screensaver
-        if wget -q "$IMAGE_URI?batteryLevel=$BATTERY_LEVEL&isCharging=$IS_CHARGING" -O $TMPFILE; then
-            # To avoid ownership errors cp+rm rather than mv
-            cp $TMPFILE $SCREENSAVERFILE
-            rm -f $TMPFILE
-            logger -s "Screen saver image updated. Refreshing screen."
-
-            # refresh screen
-            eips -f -g $SCREENSAVERFILE
+        if [ $SLEEP_DURATION -gt 0 ]; then
+            logger -s "Going back to sleep for $SLEEP_DURATION. Zzzzzz..."
+            /usr/sbin/rtcwake -s $SLEEP_DURATION
         else
-            logger -s "Error updating screensaver"
+            logger -s "Failed to get sleep duration, pausing for 60s."
+            sleep 60
         fi
-    fi
 
-    # Fetch the config file which controls how long we sleep for
-    SLEEP_DURATION=$(curl --silent --fail http://10.10.3.1/kindle-sleep-duration || echo 0)
-
-    if [ $SLEEP_DURATION -gt 0 ]; then
-        logger -s "Going back to sleep for $SLEEP_DURATION. Zzzzzz..."
-        /usr/sbin/rtcwake -s $SLEEP_DURATION
-    else
-        logger -s "Failed to get sleep duration, pausing for 60s."
-        sleep 60
-    fi
-
-done
+    done
 }
 
 run &
